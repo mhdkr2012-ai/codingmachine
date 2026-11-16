@@ -49,7 +49,9 @@ function ciz() {
     b.setAttribute("aria-pressed", "false");
     kampSecim.append(b);
 
-    tablo.append(el("div", { className: "tablo-kamp", textContent: kamp.ad }));
+    const baslik = el("div", { className: "tablo-kamp", textContent: kamp.ad });
+    baslik.dataset.kamp = kamp.id;
+    tablo.append(baslik);
     const kampBolum = el("section", { className: "kamp" });
     kampBolum.dataset.kamp = kamp.id;
     kampBolum.append(
@@ -71,7 +73,7 @@ function ciz() {
           title: `${s.harf}. ${s.ad}`,
         });
         h.dataset.id = s.id;
-        h.style.animationDelay = gecikme++ * 25 + "ms";
+        h.style.animationDelay = Math.min(gecikme++, 40) * 25 + "ms";
         h.addEventListener("click", () => soruyaGit(s.id));
         hucreler.append(h);
       }
@@ -163,8 +165,8 @@ function guncelle() {
 }
 
 function filtrele() {
-  for (const kamp of document.querySelectorAll(".kamp")) {
-    kamp.hidden = kampFiltresi !== "hepsi" && kamp.dataset.kamp !== kampFiltresi;
+  for (const e of document.querySelectorAll(".kamp, .tablo-kamp, .tablo-satir")) {
+    e.hidden = kampFiltresi !== "hepsi" && e.dataset.kamp !== kampFiltresi;
   }
   for (const bolum of document.querySelectorAll(".bolum")) {
     let gorunen = 0;

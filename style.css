@@ -140,6 +140,7 @@ h1 {
   border-top: 1px solid var(--cizgi);
 }
 .tablo-kamp:first-child { border-top: 0; }
+.tablo-kamp[hidden], .tablo-satir[hidden] { display: none; }
 .tablo-kamp + .tablo-satir { border-top: 1px solid var(--cizgi); }
 
 /* Kamp grupları */
