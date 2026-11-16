@@ -1,6 +1,6 @@
-const ANAHTAR = "codingmachine.durumlar";
+// Yeni anahtar: eski işaretler sıfırlandı, her şey "çözülmedi" başlar.
+const ANAHTAR = "codingmachine.durumlar.v2";
 
-// Kayıtlı işaretler: { soruId: true/false }. Yoksa data.js'teki "cozuldu" geçerli.
 function oku() {
   try { return JSON.parse(localStorage.getItem(ANAHTAR) || "{}"); }
   catch { return {}; }
@@ -10,10 +10,45 @@ function kaydet() {
 }
 
 const durumlar = oku();
-const cozulduMu = (s) => (s.id in durumlar ? durumlar[s.id] : s.cozuldu);
+const cozulduMu = (s) => durumlar[s.id] === true;
 
 let durumFiltresi = "hepsi";
 let kampFiltresi = "hepsi";
+let siralama = "contest";
+
+// Codeforces etiketlerinin Türkçesi
+const KONU_ADI = {
+  "greedy": "Açgözlü (greedy)",
+  "math": "Matematik",
+  "constructive algorithms": "Yapıcı algoritmalar (constructive)",
+  "implementation": "Uygulama (implementation)",
+  "dp": "Dinamik programlama (dp)",
+  "brute force": "Kaba kuvvet (brute force)",
+  "data structures": "Veri yapıları",
+  "sortings": "Sıralama (sortings)",
+  "two pointers": "İki işaretçi (two pointers)",
+  "binary search": "İkili arama (binary search)",
+  "bitmasks": "Bit işlemleri (bitmasks)",
+  "graphs": "Graflar",
+  "number theory": "Sayılar teorisi",
+  "dfs and similar": "DFS ve benzerleri",
+  "strings": "Stringler",
+  "combinatorics": "Kombinatorik",
+  "trees": "Ağaçlar",
+  "games": "Oyunlar",
+  "dsu": "DSU",
+  "interactive": "İnteraktif",
+  "matrices": "Matrisler",
+  "hashing": "Hashing",
+  "shortest paths": "En kısa yol",
+  "geometry": "Geometri",
+  "communication": "İletişim (communication)",
+  "divide and conquer": "Böl ve fethet",
+  "probabilities": "Olasılık",
+  "expression parsing": "İfade ayrıştırma",
+  "chinese remainder theorem": "Çin kalan teoremi",
+};
+const konuAdi = (k) => KONU_ADI[k] || k;
 
 // Codeforces rating rengi
 function ratingRengi(r) {
@@ -36,6 +71,12 @@ function el(etiket, ozellik = {}, ...cocuklar) {
 
 const contestSorulari = (id) => SORULAR.filter((s) => s.contest === id);
 const kampContestleri = (id) => CONTESTLER.filter((c) => c.kamp === id);
+const CONTEST = Object.fromEntries(CONTESTLER.map((c) => [c.id, c]));
+const SIRA = Object.fromEntries(SORULAR.map((s, i) => [s.id, i]));
+
+// Kolaydan zora; rating'i olmayanlar sonda
+const zorlukSirasi = (a, b) =>
+  (a.rating ?? 1e9) - (b.rating ?? 1e9) || SIRA[a.id] - SIRA[b.id];
 
 function ciz() {
   const tablo = document.getElementById("tablo");
@@ -87,7 +128,7 @@ function ciz() {
 
       // Contest bölümü
       const liste = el("ul", { className: "liste" });
-      for (const s of sorular) liste.append(soruSatiri(s));
+      for (const s of sorular) liste.append(soruSatiri(s, false));
       kampBolum.append(
         el("section", { className: "bolum", id: "bolum-" + c.id },
           el("div", { className: "bolum-head" },
@@ -105,48 +146,103 @@ function ciz() {
   guncelle();
 }
 
-function soruSatiri(s) {
-  const li = el("li", { className: "soru" + (cozulduMu(s) ? " cozuldu" : ""), id: "soru-" + s.id });
+// duz = true: sıralı listede gösterilir, contest adı da yazılır
+function soruSatiri(s, duz) {
+  const li = el("li", { className: "soru" + (cozulduMu(s) ? " cozuldu" : "") });
+  li.dataset.id = s.id;
   const isaret = el("button", { className: "isaret", textContent: "+", ariaLabel: s.ad + " çözüldü" });
   isaret.setAttribute("aria-pressed", cozulduMu(s));
-  isaret.addEventListener("click", () => degistir(s, li, isaret));
+  isaret.addEventListener("click", () => degistir(s, isaret));
 
   const rating = el("span", { className: "rating", textContent: s.rating ?? "" });
   rating.style.color = ratingRengi(s.rating);
 
+  const alt = [duz ? CONTEST[s.contest].ad : s.kaynak];
+  if (s.konular.length) alt.push(s.konular.join(", "));
+
   li.append(
     isaret,
     el("span", { className: "harf", textContent: s.harf }),
-    el("span", { className: "ad" }, s.ad, el("small", { textContent: s.kaynak })),
+    el("span", { className: "ad" }, s.ad, el("small", { textContent: alt.join(" — ") })),
     rating,
     el("a", { className: "ac", href: s.link, target: "_blank", rel: "noopener", textContent: "Aç" }),
   );
   return li;
 }
 
-function degistir(s, li, isaret) {
+function degistir(s, tiklanan) {
   const olacak = !cozulduMu(s);
   durumlar[s.id] = olacak;
   kaydet();
 
-  li.classList.toggle("cozuldu", olacak);
-  isaret.setAttribute("aria-pressed", olacak);
-  isaret.classList.remove("pat");
-  void isaret.offsetWidth; // animasyonu yeniden başlatmak için
-  if (olacak) isaret.classList.add("pat");
+  // Aynı soru birden fazla yerde görünebilir (ör. birkaç konu altında)
+  for (const li of document.querySelectorAll(`.soru[data-id="${s.id}"]`)) {
+    li.classList.toggle("cozuldu", olacak);
+    li.querySelector(".isaret").setAttribute("aria-pressed", olacak);
+  }
+  tiklanan.classList.remove("pat");
+  void tiklanan.offsetWidth; // animasyonu yeniden başlatmak için
+  if (olacak) tiklanan.classList.add("pat");
 
   document.querySelector(`.hucre[data-id="${s.id}"]`).classList.toggle("cozuldu", olacak);
   guncelle();
 }
 
 function soruyaGit(id) {
-  const li = document.getElementById("soru-" + id);
+  if (siralama !== "contest") siralamaSec("contest");
+  const li = document.querySelector(`#bolumler .soru[data-id="${id}"]`);
   if (li.classList.contains("gizli")) durumSec("hepsi");
   if (li.closest(".kamp").hidden) kampSec("hepsi");
   li.scrollIntoView({ behavior: "smooth", block: "center" });
   li.classList.remove("vurgu");
   void li.offsetWidth;
   li.classList.add("vurgu");
+}
+
+// Sıralı görünüm: seçili kamptaki sorular, başlıklar altında
+function gruplar() {
+  const sorular = SORULAR
+    .filter((s) => kampFiltresi === "hepsi" || CONTEST[s.contest].kamp === kampFiltresi)
+    .sort(zorlukSirasi);
+  const g = new Map();
+  const ekle = (anahtar, s) => (g.get(anahtar) || g.set(anahtar, []).get(anahtar)).push(s);
+
+  if (siralama === "zorluk") {
+    for (const s of sorular) ekle(s.rating == null ? "Rating yok" : "Rating " + s.rating, s);
+  } else if (siralama === "harf") {
+    for (const s of [...sorular].sort((a, b) => a.harf[0].localeCompare(b.harf[0])))
+      ekle(s.harf[0] + " soruları", s);
+  } else if (siralama === "durum") {
+    for (const s of sorular.filter((s) => !cozulduMu(s))) ekle("Çözülmedi", s);
+    for (const s of sorular.filter(cozulduMu)) ekle("Çözüldü", s);
+  } else if (siralama === "konu") {
+    const sayac = {};
+    for (const s of sorular) for (const k of s.konular) sayac[k] = (sayac[k] || 0) + 1;
+    const konular = Object.keys(sayac).sort((a, b) => sayac[b] - sayac[a]);
+    for (const k of konular) for (const s of sorular) if (s.konular.includes(k)) ekle(konuAdi(k), s);
+    for (const s of sorular) if (!s.konular.length) ekle("Konu bilinmiyor", s);
+  }
+  return g;
+}
+
+function duzCiz() {
+  const duz = document.getElementById("duz");
+  duz.replaceChildren();
+  for (const [baslik, sorular] of gruplar()) {
+    const liste = el("ul", { className: "liste" });
+    for (const s of sorular) liste.append(soruSatiri(s, true));
+    const h3 = el("h3", { textContent: baslik });
+    if (siralama === "zorluk") h3.style.color = ratingRengi(sorular[0].rating);
+    duz.append(
+      el("section", { className: "bolum grup-duz" },
+        el("div", { className: "bolum-head" }, h3, el("span", { className: "sayi" })),
+        el("div", { className: "cubuk" }, el("span")),
+        liste,
+      ),
+    );
+  }
+  duz.append(el("p", { className: "bos-not", id: "duz-bos", hidden: true, textContent: "Bu filtrede soru yok." }));
+  guncelle();
 }
 
 function guncelle() {
@@ -159,6 +255,12 @@ function guncelle() {
     document.getElementById("sayi-" + c.id).textContent = `${n} / ${sorular.length}`;
     document.getElementById("cubuk-" + c.id).style.width = sorular.length ? (n / sorular.length) * 100 + "%" : "0";
   }
+  for (const g of document.querySelectorAll(".grup-duz")) {
+    const hepsi = g.querySelectorAll(".soru").length;
+    const n = g.querySelectorAll(".soru.cozuldu").length;
+    g.querySelector(".sayi").textContent = `${n} / ${hepsi}`;
+    g.querySelector(".cubuk span").style.width = (n / hepsi) * 100 + "%";
+  }
   document.getElementById("toplam-cozulen").textContent = toplam;
   document.getElementById("toplam-soru").textContent = SORULAR.length;
   filtrele();
@@ -168,6 +270,9 @@ function filtrele() {
   for (const e of document.querySelectorAll(".kamp, .tablo-kamp, .tablo-satir")) {
     e.hidden = kampFiltresi !== "hepsi" && e.dataset.kamp !== kampFiltresi;
   }
+  document.getElementById("bolumler").hidden = siralama !== "contest";
+  document.getElementById("duz").hidden = siralama === "contest";
+
   for (const bolum of document.querySelectorAll(".bolum")) {
     let gorunen = 0;
     for (const li of bolum.querySelectorAll(".soru")) {
@@ -176,8 +281,11 @@ function filtrele() {
       li.classList.toggle("gizli", !goster);
       if (goster) gorunen++;
     }
-    bolum.querySelector(".bos-not").hidden = gorunen > 0;
+    if (bolum.classList.contains("grup-duz")) bolum.hidden = gorunen === 0;
+    else bolum.querySelector(".bos-not").hidden = gorunen > 0;
   }
+  const duzBos = document.getElementById("duz-bos");
+  if (duzBos) duzBos.hidden = !!document.querySelector(".grup-duz:not([hidden])");
 }
 
 function secimleriIsaretle(grup, ozellik, deger) {
@@ -186,7 +294,19 @@ function secimleriIsaretle(grup, ozellik, deger) {
   }
 }
 function durumSec(d) { durumFiltresi = d; secimleriIsaretle("durum-secim", "durum", d); filtrele(); }
-function kampSec(k) { kampFiltresi = k; secimleriIsaretle("kamp-secim", "kamp", k); filtrele(); }
+function kampSec(k) {
+  kampFiltresi = k;
+  secimleriIsaretle("kamp-secim", "kamp", k);
+  if (siralama !== "contest") duzCiz();
+  filtrele();
+}
+function siralamaSec(s) {
+  siralama = s;
+  document.getElementById("siralama").value = s;
+  if (s === "contest") document.getElementById("duz").replaceChildren();
+  else duzCiz();
+  filtrele();
+}
 
 ciz();
 
@@ -198,3 +318,4 @@ document.getElementById("kamp-secim").addEventListener("click", (e) => {
   const b = e.target.closest(".secim");
   if (b) kampSec(b.dataset.kamp);
 });
+document.getElementById("siralama").addEventListener("change", (e) => siralamaSec(e.target.value));

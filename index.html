@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
   <header class="hero">
@@ -29,11 +29,21 @@
       <button class="secim" data-durum="cozulmedi" aria-pressed="false">Çözülmedi</button>
       <button class="secim" data-durum="cozuldu" aria-pressed="false">Çözüldü</button>
     </div>
+    <label class="sirala">Sırala
+      <select id="siralama">
+        <option value="contest">Contest sırası</option>
+        <option value="zorluk">Zorluk (rating)</option>
+        <option value="harf">Harf (A, B, C, D)</option>
+        <option value="konu">Konu</option>
+        <option value="durum">Çözüldü / çözülmedi</option>
+      </select>
+    </label>
   </nav>
 
   <main id="bolumler"></main>
+  <main id="duz" hidden></main>
 
-  <script src="data.js?v=3"></script>
-  <script src="app.js?v=3"></script>
+  <script src="data.js?v=4"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

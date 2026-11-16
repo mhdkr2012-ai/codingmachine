@@ -238,3 +238,15 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--r-mavi); outlin
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Sıralama */
+.sirala { display: inline-flex; align-items: center; gap: 8px; color: var(--soluk); font-size: 0.9rem; font-weight: 600; }
+.sirala select {
+  font: 600 0.9rem var(--font);
+  color: var(--murekkep);
+  background: var(--yuzey);
+  border: 1px solid var(--cizgi);
+  border-radius: 6px;
+  padding: 7px 10px;
+}
+main[hidden], .bolum[hidden] { display: none; }
