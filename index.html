@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>codingmachine</title>
+  <link rel="icon" href="assets/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-head">
+      <h1>Kamp soruları</h1>
+      <p class="toplam"><span id="toplam-cozulen">0</span><span class="bolu">/</span><span id="toplam-soru">0</span></p>
+    </div>
+    <p class="aciklama">Çözdüğün soruyu işaretle. İşaretler bu tarayıcıda saklanır.</p>
+    <div class="tablo" id="tablo" aria-label="Kategori özetleri"></div>
+  </header>
+
+  <nav class="filtre" aria-label="Filtre">
+    <div class="grup" id="kamp-secim" role="group" aria-label="Kampa göre">
+      <button class="secim" data-kamp="hepsi" aria-pressed="true">Tüm kamplar</button>
+    </div>
+    <div class="grup" id="durum-secim" role="group" aria-label="Duruma göre">
+      <button class="secim" data-durum="hepsi" aria-pressed="true">Hepsi</button>
+      <button class="secim" data-durum="cozulmedi" aria-pressed="false">Çözülmedi</button>
+      <button class="secim" data-durum="cozuldu" aria-pressed="false">Çözüldü</button>
+    </div>
+  </nav>
+
+  <main id="bolumler"></main>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
